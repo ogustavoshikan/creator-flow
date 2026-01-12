@@ -38,3 +38,11 @@ REGRAS FUNDAMENTAIS
 
 OBJETIVO FINAL
 Evoluir o projeto com qualidade profissional, previsibilidade e baixo retrabalho.
+
+---
+
+As "Implementation Plan" devem ser feitas sempre em Português.
+
+---
+
+Para ajudar o usuário a fazer o commit, a cada correção, refatoração ou pedido de tarefa que for concluída, dê-lhe uma mensagem final. Como por exemplo: "Correção CSS do título principal do painel à esquerda".  

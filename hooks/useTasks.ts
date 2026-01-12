@@ -20,11 +20,11 @@ export function useTasks() {
         isStagnant: dbTask.is_stagnant,
         image: dbTask.image,
         date: dbTask.date,
+        dueDate: dbTask.due_date,
         comments: dbTask.comments,
         attachments: dbTask.attachments,
         tags: dbTask.tags,
         assigneeAvatar: dbTask.assignee_avatar,
-        // Add other fields as necessary
     });
 
     const fetchTasks = useCallback(async () => {
@@ -72,6 +72,7 @@ export function useTasks() {
                 is_stagnant: newTask.isStagnant || false,
                 image: newTask.image,
                 date: newTask.date,
+                due_date: newTask.dueDate,
                 comments: newTask.comments || 0,
                 attachments: newTask.attachments || 0,
                 tags: newTask.tags || [],
@@ -113,6 +114,7 @@ export function useTasks() {
                 is_stagnant: updatedTask.isStagnant,
                 image: updatedTask.image,
                 date: updatedTask.date,
+                due_date: updatedTask.dueDate,
                 comments: updatedTask.comments,
                 attachments: updatedTask.attachments,
                 tags: updatedTask.tags,
