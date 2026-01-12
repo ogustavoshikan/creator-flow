@@ -492,7 +492,7 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
                         }
                       }}
                       placeholder="Adicione uma descrição..."
-                      className="text-sm text-foreground leading-relaxed font-medium bg-transparent border border-border rounded-lg p-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none min-h-[100px]"
+                      className="text-sm text-foreground leading-relaxed font-medium bg-transparent border border-border rounded-lg p-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-y min-h-[100px]"
                     />
                   ) : (
                     <p
