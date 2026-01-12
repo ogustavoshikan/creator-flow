@@ -332,13 +332,13 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
                 {/* Media por Plataforma */}
                 <div className="aspect-video w-full bg-card rounded-xl border border-border relative overflow-hidden group cursor-pointer shadow-sm">
                   {focusedTask.platform === 'YouTube' && (
-                    <img src="/assets/youtube-img.jpg" alt="YouTube" className="w-full h-full object-cover" />
+                    <img src="/images/youtube-img.jpg" alt="YouTube" className="w-full h-full object-cover" />
                   )}
                   {focusedTask.platform === 'Instagram' && (
-                    <img src="/assets/instagram-img.jpg" alt="Instagram" className="w-full h-full object-cover" />
+                    <img src="/images/instagram-img.jpg" alt="Instagram" className="w-full h-full object-cover" />
                   )}
                   {focusedTask.platform === 'Blog' && (
-                    <img src="/assets/blog-img.jpg" alt="Blog" className="w-full h-full object-cover" />
+                    <img src="/images/blog-img.jpg" alt="Blog" className="w-full h-full object-cover" />
                   )}
                   {focusedTask.platform === 'TikTok' && (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#00f2ea] via-black to-[#ff0050]">
