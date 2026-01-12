@@ -9,6 +9,17 @@ export function useTasks() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Helper to extract YYYY-MM-DD from ISO date string or pass through simple date
+    const normalizeDateString = (dateStr: string | null | undefined): string | undefined => {
+        if (!dateStr) return undefined;
+        // If it's already YYYY-MM-DD format (10 chars, no T), return as is
+        if (dateStr.length === 10 && !dateStr.includes('T')) return dateStr;
+        // If it has 'T', extract just the date part (before T)
+        if (dateStr.includes('T')) return dateStr.split('T')[0];
+        // Fallback: return as is
+        return dateStr;
+    };
+
     const mapDatabaseTaskToTask = (dbTask: any): Task => ({
         id: dbTask.id,
         title: dbTask.title,
@@ -20,7 +31,7 @@ export function useTasks() {
         isStagnant: dbTask.is_stagnant,
         image: dbTask.image,
         date: dbTask.date,
-        dueDate: dbTask.due_date,
+        dueDate: normalizeDateString(dbTask.due_date),
         comments: dbTask.comments,
         attachments: dbTask.attachments,
         tags: dbTask.tags,

@@ -294,7 +294,19 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           {/* Due Date - Subtle styling */}
           {!isPosted && task.dueDate && (
             <span className="text-[10px] text-[#adadad] italic shrink-0">
-              {new Date(task.dueDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+              {(() => {
+                try {
+                  if (!task.dueDate) return null;
+                  // Se for formato YYYY-MM-DD simples, adiciona meio dia para evitar problemas de timezone
+                  // Se já for ISO (tem T), usa como está
+                  const dateToParse = task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T12:00:00`;
+                  const dateObj = new Date(dateToParse);
+                  if (isNaN(dateObj.getTime())) return task.dueDate; // Fallback se falhar
+                  return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                } catch {
+                  return '';
+                }
+              })()}
             </span>
           )}
         </div>
