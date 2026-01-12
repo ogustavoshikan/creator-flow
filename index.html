@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creator Flow</title>
+
+  <!-- Fonts: Inter and Material Symbols as requested in design -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --radius: 0.5rem;
+    }
+
+    .dark {
+      /* Base Colors - Zinc Palette adapted for Creator Flow */
+      --background: #000000;
+      --foreground: #fafafa;
+
+      --card: #09090b;
+      --card-foreground: #fafafa;
+
+      --popover: #09090b;
+      --popover-foreground: #fafafa;
+
+      --primary: #135bec;
+      --primary-foreground: #ffffff;
+
+      --secondary: #27272a;
+      --secondary-foreground: #fafafa;
+
+      --muted: #27272a;
+      --muted-foreground: #a1a1aa;
+
+      --accent: #27272a;
+      --accent-foreground: #fafafa;
+
+      --destructive: #7f1d1d;
+      --destructive-foreground: #fafafa;
+
+      --border: #27272a;
+      /* Zinc 800 */
+      --input: #27272a;
+      --ring: #135bec;
+
+      /* Sidebar Specific - Slightly lighter than pure black */
+      --sidebar: #050505;
+      --sidebar-foreground: #a1a1aa;
+      --sidebar-border: #1a1a1a;
+    }
+
+    /* Custom Scrollbar to match design */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+    }
+  </style>
+
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
