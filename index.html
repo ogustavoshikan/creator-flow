@@ -16,6 +16,44 @@
   <style>
     :root {
       --radius: 0.5rem;
+
+      /* Light Mode Defaults */
+      --background: #ffffff;
+      --foreground: #09090b;
+
+      --card: #ffffff;
+      --card-foreground: #09090b;
+
+      --popover: #ffffff;
+      --popover-foreground: #09090b;
+
+      --primary: #135bec;
+      --primary-foreground: #ffffff;
+
+      --secondary: #f4f4f5;
+      --secondary-foreground: #18181b;
+
+      --muted: #f4f4f5;
+      --muted-foreground: #71717a;
+
+      --accent: #f4f4f5;
+      --accent-foreground: #18181b;
+
+      --destructive: #dc2626;
+      --destructive-foreground: #fafafa;
+
+      --border: #e4e4e7;
+      --input: #e4e4e7;
+      --ring: #135bec;
+
+      --sidebar: #f8fafc;
+      --sidebar-foreground: #64748b;
+      --sidebar-border: #e2e8f0;
+    }
+
+    .disable-transitions,
+    .disable-transitions * {
+      transition: none !important;
     }
 
     .dark {
@@ -56,6 +94,7 @@
     }
 
     /* Custom Scrollbar to match design */
+    /* Custom Scrollbar to match design */
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -66,11 +105,20 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
       border-radius: 10px;
     }
 
     .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Dark Mode Scrollbar Override */
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.2);
     }
 

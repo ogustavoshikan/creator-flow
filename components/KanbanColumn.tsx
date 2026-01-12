@@ -6,6 +6,8 @@ interface KanbanColumnProps {
   column: ColumnType;
   tasks: Task[];
   onCardClick: (task: Task) => void;
+  onDuplicateTask?: (taskId: string) => void;
+  onDeleteTask?: (taskId: string) => void;
   onTaskMove: (taskId: string, newStatus: Status) => void;
 
   // Selection/Focus Props
@@ -24,6 +26,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({
   column,
   tasks,
   onCardClick,
+  onDuplicateTask,
+  onDeleteTask,
   onTaskMove,
   onTaskFocus,
   focusedTaskId,
@@ -109,6 +113,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = React.memo(({
             isFocused={focusedTaskId === task.id}
             onClick={() => onCardClick(task)}
             onFocus={() => onTaskFocus(task)}
+            onDuplicate={onDuplicateTask}
+            onDelete={onDeleteTask}
             onDragStartNotify={() => onDragStartSession(column.id)}
             onDragEndNotify={onDragEndSession}
           />

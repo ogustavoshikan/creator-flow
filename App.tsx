@@ -15,13 +15,14 @@ import { Sidebar } from './components/Sidebar';
 import { useAuth } from './hooks/useAuth';
 import { LoginPage } from './components/LoginPage';
 import { useTasks } from './hooks/useTasks';
+import { ConfirmModal } from './components/ConfirmModal';
 
 export default function App() {
   // --- Authentication ---
   const { user, loading: authLoading } = useAuth();
 
   // --- Data ---
-  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, moveTask } = useTasks();
+  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, duplicateTask, moveTask } = useTasks();
 
   // --- State ---
   // Tasks state is now managed by useTasks hook
@@ -31,8 +32,11 @@ export default function App() {
   // Track collapse state instead of open/close. Default collapsed (true) creates the strip.
   const [isDetailsPanelCollapsed, setIsDetailsPanelCollapsed] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
   const [activePlatform, setActivePlatform] = useState<Platform | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [dragSession, setDragSession] = useState<{
     isActive: boolean;
     sourceColumn: string;
@@ -91,10 +95,27 @@ export default function App() {
     if (focusedTask?.id === updatedTask.id) setFocusedTask(updatedTask);
   }, [focusedTask, updateTask]);
 
+  const handleDuplicateTask = useCallback((taskId: string) => {
+    duplicateTask(taskId);
+  }, [duplicateTask]);
+
+  const confirmDeleteTask = useCallback(() => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete);
+      if (focusedTask?.id === taskToDelete) setFocusedTask(null);
+      if (selectedTask?.id === taskToDelete) {
+        setIsModalOpen(false);
+        setTimeout(() => setSelectedTask(null), 200);
+      }
+      setTaskToDelete(null); // Fecha modal via efeito ou manual se isOpen depender disso (mas depende de isDeleteModalOpen)
+      setIsDeleteModalOpen(false);
+    }
+  }, [taskToDelete, deleteTask, focusedTask, selectedTask]);
+
   const handleDeleteTask = useCallback((taskId: string) => {
-    deleteTask(taskId);
-    if (focusedTask?.id === taskId) setFocusedTask(null);
-  }, [focusedTask, deleteTask]);
+    setTaskToDelete(taskId);
+    setIsDeleteModalOpen(true);
+  }, []);
 
   const handleTaskMove = useCallback((taskId: string, newStatus: Status) => {
     moveTask(taskId, newStatus);
@@ -142,6 +163,8 @@ export default function App() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed(prev => !prev)}
+        isZenMode={isZenMode}
+        onZenModeToggle={() => setIsZenMode(prev => !prev)}
       />
 
       {/* Main Content */}
@@ -155,6 +178,7 @@ export default function App() {
           activePlatform={activePlatform}
           onPlatformChange={setActivePlatform}
           onCreateNew={handleCreateNewTask}
+          isZenMode={isZenMode}
         />
 
         <div className="flex flex-1 overflow-hidden relative">
@@ -162,6 +186,8 @@ export default function App() {
             columns={COLUMNS}
             tasksByColumn={tasksByColumn}
             onCardClick={handleCardClick}
+            onDuplicateTask={handleDuplicateTask}
+            onDeleteTask={handleDeleteTask}
             onTaskMove={handleTaskMove}
             onTaskFocus={handleTaskFocus}
             focusedTaskId={focusedTask?.id}
@@ -198,6 +224,16 @@ export default function App() {
         task={selectedTask}
         onSave={handleUpdateTask}
         onDelete={handleDeleteTask}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDeleteTask}
+        title="Excluir Tarefa"
+        message="Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        variant="danger"
       />
     </div>
   );

@@ -39,7 +39,7 @@ export function useTasks() {
             const { data, error: fetchError } = await supabase
                 .from('tasks')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: true });
 
             if (fetchError) throw fetchError;
 
@@ -87,7 +87,7 @@ export function useTasks() {
             if (insertError) throw insertError;
 
             const createdTask = mapDatabaseTaskToTask(data);
-            setTasks(prev => [createdTask, ...prev]);
+            setTasks(prev => [...prev, createdTask]);
             return createdTask;
         } catch (err: any) {
             console.error('Error creating task:', err);
@@ -155,6 +155,29 @@ export function useTasks() {
         }
     };
 
+    const duplicateTask = async (taskId: string) => {
+        const taskToDuplicate = tasks.find(t => t.id === taskId);
+        if (!taskToDuplicate || !user) return;
+
+        const newTask = {
+            title: `${taskToDuplicate.title} (Cópia)`,
+            platform: taskToDuplicate.platform,
+            priority: taskToDuplicate.priority,
+            status: taskToDuplicate.status,
+            description: taskToDuplicate.description,
+            checklist: taskToDuplicate.checklist,
+            isStagnant: taskToDuplicate.isStagnant,
+            image: taskToDuplicate.image,
+            date: taskToDuplicate.date,
+            comments: 0,
+            attachments: 0,
+            tags: taskToDuplicate.tags,
+            assigneeAvatar: taskToDuplicate.assigneeAvatar
+        };
+
+        await createTask(newTask);
+    };
+
     const moveTask = async (taskId: string, newStatus: Status) => {
         const task = tasks.find(t => t.id === taskId);
         if (task) {
@@ -169,6 +192,7 @@ export function useTasks() {
         createTask,
         updateTask,
         deleteTask,
+        duplicateTask,
         moveTask,
         refreshTasks: fetchTasks
     };

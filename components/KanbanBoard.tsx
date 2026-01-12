@@ -6,6 +6,8 @@ interface KanbanBoardProps {
   columns: ColumnType[];
   tasksByColumn: Record<string, Task[]>;
   onCardClick: (task: Task) => void;
+  onDuplicateTask?: (taskId: string) => void;
+  onDeleteTask?: (taskId: string) => void;
   onTaskMove: (taskId: string, newStatus: Status) => void;
   onTaskFocus: (task: Task) => void;
   focusedTaskId?: string;
@@ -20,6 +22,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   columns,
   tasksByColumn,
   onCardClick,
+  onDuplicateTask,
+  onDeleteTask,
   onTaskMove,
   onTaskFocus,
   focusedTaskId,
@@ -48,6 +52,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           column={col}
           tasks={tasksByColumn[col.id] || []}
           onCardClick={onCardClick}
+          onDuplicateTask={onDuplicateTask}
+          onDeleteTask={onDeleteTask}
           onTaskMove={onTaskMove}
           onTaskFocus={onTaskFocus}
           focusedTaskId={focusedTaskId}

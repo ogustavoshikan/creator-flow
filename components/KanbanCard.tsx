@@ -8,6 +8,8 @@ interface KanbanCardProps {
   isFocused?: boolean;
   onClick: () => void;
   onFocus?: () => void; // Handler for the select button
+  onDuplicate?: (taskId: string) => void;
+  onDelete?: (taskId: string) => void;
   onDragStartNotify?: () => void;
   onDragEndNotify?: () => void;
 }
@@ -17,6 +19,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   isFocused = false,
   onClick,
   onFocus,
+  onDuplicate,
+  onDelete,
   onDragStartNotify,
   onDragEndNotify
 }) => {
@@ -58,12 +62,12 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   // Helper for priority badges
   const getPriorityStyle = (priority: string) => {
     switch (priority) {
-      case 'High Priority': return 'bg-red-950/20 text-red-300 border-red-900/50';
-      case 'Low Priority': return 'bg-green-950/20 text-green-300 border-green-900/50';
-      case 'Medium': return 'bg-blue-950/20 text-blue-300 border-blue-900/50';
-      case 'Sponsored': return 'bg-yellow-950/20 text-yellow-300 border-yellow-900/50';
-      case 'Draft': return 'bg-gray-950/20 text-gray-300 border-gray-900/50';
-      case 'Editing': return 'bg-purple-950/20 text-purple-300 border-purple-900/50';
+      case 'High Priority': return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-300 dark:border-red-900/50';
+      case 'Low Priority': return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-300 dark:border-green-900/50';
+      case 'Medium': return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-300 dark:border-blue-900/50';
+      case 'Sponsored': return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-yellow-950/20 dark:text-yellow-300 dark:border-yellow-900/50';
+      case 'Draft': return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-gray-950/20 dark:text-gray-300 dark:border-gray-900/50';
+      case 'Editing': return 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:text-purple-300 dark:border-purple-900/50';
       case 'Posted': return 'bg-muted text-muted-foreground border-border';
       default: return 'bg-muted text-muted-foreground';
     }
@@ -193,27 +197,62 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       `}></div>
 
       <div className="flex justify-between items-start pl-2">
-        {/* Title */}
-        <h4 className={`font-bold text-sm mb-1 leading-snug tracking-tight flex-1 pr-2
-          ${isPosted ? 'text-muted-foreground line-through decoration-muted-foreground/50 group-hover:text-foreground group-hover:no-underline' : 'text-card-foreground'}
-        `}>
-          {task.title}
-        </h4>
+        {/* Left Content: Title + Description */}
+        <div className="flex-1 pr-2 min-w-0">
+          {/* Title */}
+          <h4 className={`font-bold text-sm mb-1 leading-snug tracking-tight mt-1
+            ${isPosted ? 'text-muted-foreground line-through decoration-muted-foreground/50 group-hover:text-foreground group-hover:no-underline' : 'text-card-foreground'}
+          `}>
+            {task.title}
+          </h4>
 
-        {/* Selection/Focus Button */}
-        <button
-          onClick={handleFocusClick}
-          className={`
-            shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200
-            ${isFocused
-              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-100 opacity-100'
-              : 'bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground'
-            }
-          `}
-          title="Ver Detalhes"
-        >
-          <Icon name="visibility" className="text-[14px]" />
-        </button>
+          {/* Description Preview */}
+          {task.description && !isPosted && (
+            <p className="mt-1 text-xs text-muted-foreground line-clamp-3 leading-relaxed break-words font-normal">
+              {task.description}
+            </p>
+          )}
+        </div>
+
+        {/* Actions Column */}
+        <div className="flex flex-col gap-1 shrink-0 ml-1">
+          {/* Selection/Focus Button */}
+          <button
+            onClick={handleFocusClick}
+            className={`
+              shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200
+              ${isFocused
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-100 opacity-100'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              }
+            `}
+            title="Ver Detalhes"
+          >
+            <Icon name="visibility" className="text-[14px]" />
+          </button>
+
+          {/* Duplicate Button */}
+          {onDuplicate && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDuplicate(task.id); }}
+              className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+              title="Duplicar Card"
+            >
+              <Icon name="content_copy" className="text-[14px]" />
+            </button>
+          )}
+
+          {/* Delete Button */}
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+              className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+              title="Excluir Card"
+            >
+              <Icon name="delete" className="text-[14px]" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Metadata Row */}
@@ -237,16 +276,28 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           )}
         </div>
 
-        {/* Priority Tags Row */}
-        {!isPosted && task.priority.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {task.priority.map(p => (
-              <span key={p} className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wide border ${getPriorityStyle(p)}`}>
-                {PRIORITY_LABELS[p] || p}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Priority Tags Row + Due Date */}
+        <div className="flex items-end justify-between gap-2">
+          {/* Priority Tags */}
+          {!isPosted && task.priority.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {task.priority.map(p => (
+                <span key={p} className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wide border ${getPriorityStyle(p)}`}>
+                  {PRIORITY_LABELS[p] || p}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div /> /* Spacer when no priorities */
+          )}
+
+          {/* Due Date - Subtle styling */}
+          {!isPosted && task.dueDate && (
+            <span className="text-[10px] text-[#adadad] italic shrink-0">
+              {new Date(task.dueDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

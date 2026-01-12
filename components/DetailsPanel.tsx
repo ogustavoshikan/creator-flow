@@ -1,7 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { Icon } from './Icon';
-import { Task, Priority, Platform } from '../types';
-import { PRIORITY_LABELS } from '../constants';
+import { Task, Priority, Platform, Status } from '../types';
+import { PRIORITY_LABELS, COLUMNS } from '../constants';
+
+// Constantes para plataformas disponíveis
+const PLATFORMS: Platform[] = ['YouTube', 'Instagram', 'TikTok', 'Blog'];
 
 interface DetailsPanelProps {
   isCollapsed: boolean;
@@ -20,9 +24,27 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
   onDelete,
   onUpdateTask
 }) => {
+  // Estado para redimensionamento
+  const [width, setWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
 
-  // Ref para scroll container
+  // Estados para edição inline
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedDescription, setEditedDescription] = useState('');
+  const [isPlatformOpen, setIsPlatformOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+
+  // Refs para scroll container e popovers
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const platformRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
+  const platformButtonRef = useRef<HTMLButtonElement>(null);
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   // Scroll para o topo quando abrir o painel ou mudar de task
   useEffect(() => {
@@ -30,6 +52,145 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
       scrollContainerRef.current.scrollTop = 0;
     }
   }, [isCollapsed, focusedTask?.id]);
+
+  // Lógica de Redimensionamento
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback((e: MouseEvent) => {
+    if (isResizing) {
+      // Para o painel direito, a largura é (largura da janela - posição do mouse)
+      const newWidth = window.innerWidth - e.clientX;
+      // Limites: min 300px, max 800px
+      setWidth(Math.max(300, Math.min(newWidth, 800)));
+    }
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, resize, stopResizing]);
+
+  // Reset editing states when task changes
+  useEffect(() => {
+    setIsEditingTitle(false);
+    setIsEditingDescription(false);
+    setIsPlatformOpen(false);
+    setIsStatusOpen(false);
+    if (focusedTask) {
+      setEditedTitle(focusedTask.title);
+      setEditedDescription(focusedTask.description || '');
+    }
+  }, [focusedTask?.id]);
+
+  // Focus input when editing title
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  // Focus textarea when editing description
+  useEffect(() => {
+    if (isEditingDescription && descriptionRef.current) {
+      descriptionRef.current.focus();
+    }
+  }, [isEditingDescription]);
+
+  // Close popovers on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (platformRef.current && !platformRef.current.contains(e.target as Node)) {
+        setIsPlatformOpen(false);
+      }
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setIsStatusOpen(false);
+      }
+    };
+
+    if (isPlatformOpen || isStatusOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isPlatformOpen, isStatusOpen]);
+
+  // Handlers para edição inline
+  const handleSaveTitle = () => {
+    if (focusedTask && editedTitle.trim() !== focusedTask.title) {
+      onUpdateTask({ ...focusedTask, title: editedTitle.trim() || focusedTask.title });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleSaveDescription = () => {
+    if (focusedTask && editedDescription !== focusedTask.description) {
+      onUpdateTask({ ...focusedTask, description: editedDescription });
+    }
+    setIsEditingDescription(false);
+  };
+
+  const handleOpenPlatformPopover = () => {
+    if (platformButtonRef.current) {
+      const rect = platformButtonRef.current.getBoundingClientRect();
+      setPopoverPosition({ top: rect.bottom + 4, left: rect.left });
+    }
+    setIsStatusOpen(false);
+    setIsPlatformOpen(!isPlatformOpen);
+  };
+
+  const handleOpenStatusPopover = () => {
+    if (statusButtonRef.current) {
+      const rect = statusButtonRef.current.getBoundingClientRect();
+      setPopoverPosition({ top: rect.bottom + 4, left: rect.left });
+    }
+    setIsPlatformOpen(false);
+    setIsStatusOpen(!isStatusOpen);
+  };
+
+  const handlePlatformChange = (platform: Platform) => {
+    if (focusedTask) {
+      onUpdateTask({ ...focusedTask, platform });
+    }
+    setIsPlatformOpen(false);
+  };
+
+  const handleStatusChange = (status: Status) => {
+    if (focusedTask) {
+      onUpdateTask({ ...focusedTask, status });
+    }
+    setIsStatusOpen(false);
+  };
+
+  const handleChecklistToggle = (itemId: string) => {
+    if (focusedTask && focusedTask.checklist) {
+      const updatedChecklist = focusedTask.checklist.map(item =>
+        item.id === itemId ? { ...item, checked: !item.checked } : item
+      );
+      onUpdateTask({ ...focusedTask, checklist: updatedChecklist });
+    }
+  };
 
   // Helpers using Tailwind semantic classes for priorities
   const getPanelPriorityStyle = (priority: string) => {
@@ -80,24 +241,60 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
   return (
     <aside
       className={`
-        hidden xl:flex flex-col h-full shrink-0 z-10 bg-sidebar border-l border-sidebar-border
-        transition-all duration-300 ease-in-out
-        ${isCollapsed ? 'w-0 border-l-0' : 'w-[400px]'}
+        hidden xl:flex flex-col h-full shrink-0 z-10 bg-sidebar border-l border-sidebar-border relative
+        ${isResizing ? 'transition-none' : 'transition-all duration-slow ease-in-out'}
+        ${isCollapsed ? 'border-l-0' : ''}
       `}
+      style={{ width: isCollapsed ? 0 : width }}
     >
+      {/* Resize Handle */}
+      {!isCollapsed && (
+        <div
+          className="absolute top-0 left-0 w-1 h-full cursor-col-resize hover:bg-primary active:bg-primary transition-colors z-50"
+          onMouseDown={startResizing}
+        ></div>
+      )}
+
       <div className="flex-1 overflow-hidden relative w-full">
         {/* Content Container - Fades out when collapsed */}
-        <div className={`absolute inset-0 w-[400px] flex flex-col transition-opacity duration-300 ${isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`absolute inset-0 w-full flex flex-col transition-opacity duration-300 ${isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <div ref={scrollContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-8">
             {focusedTask ? (
               <div className="flex flex-col gap-6 animate-fade-in">
 
                 {/* Header: Título + Ações na mesma linha */}
                 <div className="flex items-start justify-between gap-4">
-                  <h2 className="text-2xl font-bold text-foreground leading-tight flex-1">{focusedTask.title}</h2>
+                  {isEditingTitle ? (
+                    <input
+                      ref={titleInputRef}
+                      type="text"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      onBlur={handleSaveTitle}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveTitle();
+                        if (e.key === 'Escape') {
+                          setEditedTitle(focusedTask.title);
+                          setIsEditingTitle(false);
+                        }
+                      }}
+                      className="text-2xl font-bold text-foreground leading-tight flex-1 bg-transparent border-b-2 border-primary outline-none"
+                    />
+                  ) : (
+                    <h2
+                      className="text-2xl font-bold text-foreground leading-tight flex-1 cursor-text hover:bg-accent/50 rounded px-1 -mx-1 transition-colors"
+                      onClick={() => {
+                        setEditedTitle(focusedTask.title);
+                        setIsEditingTitle(true);
+                      }}
+                      title="Clique para editar"
+                    >
+                      {focusedTask.title}
+                    </h2>
+                  )}
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => onEdit(focusedTask)} className={actionButtonClass} title="Editar">
-                      <Icon name="edit" className="text-lg" />
+                    <button onClick={() => onEdit(focusedTask)} className={actionButtonClass} title="Editar no Modal">
+                      <Icon name="open_in_new" className="text-lg" />
                     </button>
                     <button onClick={() => onDelete(focusedTask.id)} className={`${actionButtonClass} hover:text-red-400 hover:bg-red-950/20`} title="Excluir">
                       <Icon name="delete" className="text-lg" />
@@ -153,9 +350,14 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
 
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
+                  {/* Plataforma - Editable Popover */}
+                  <div className="flex flex-col gap-2" ref={platformRef}>
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Plataforma</label>
-                    <div className="flex items-center gap-3">
+                    <button
+                      ref={platformButtonRef}
+                      onClick={handleOpenPlatformPopover}
+                      className="flex items-center gap-3 p-2 -m-2 rounded-lg hover:bg-accent transition-colors group"
+                    >
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${focusedTask.platform === 'YouTube' ? 'bg-[#ff0000] text-white' :
                         focusedTask.platform === 'Instagram' ? 'bg-[#e1306c] text-white' :
                           focusedTask.platform === 'TikTok' ? 'bg-white text-black' :
@@ -165,45 +367,164 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({
                         <Icon name={focusedTask.platform === 'YouTube' ? 'play_arrow' : focusedTask.platform === 'Instagram' ? 'photo_camera' : focusedTask.platform === 'TikTok' ? 'music_note' : 'public'} className="text-[12px]" />
                       </div>
                       <span className="font-bold text-sm text-foreground">{focusedTask.platform}</span>
-                    </div>
+                      <Icon name="expand_more" className="text-muted-foreground group-hover:text-foreground transition-colors ml-auto text-sm" />
+                    </button>
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  {/* Status - Editable Popover */}
+                  <div className="flex flex-col gap-2" ref={statusRef}>
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</label>
-                    <div className="flex items-center gap-3">
+                    <button
+                      ref={statusButtonRef}
+                      onClick={handleOpenStatusPopover}
+                      className="flex items-center gap-3 p-2 -m-2 rounded-lg hover:bg-accent transition-colors group"
+                    >
                       <span className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)] ${focusedTask.status === 'Ideias' ? 'bg-yellow-500' :
                         focusedTask.status === 'Roteiro' ? 'bg-blue-500' :
                           focusedTask.status === 'Produção' ? 'bg-purple-500' :
                             'bg-green-500'
                         }`}></span>
                       <span className="font-bold text-sm text-foreground">{focusedTask.status}</span>
-                    </div>
+                      <Icon name="expand_more" className="text-muted-foreground group-hover:text-foreground transition-colors ml-auto text-sm" />
+                    </button>
                   </div>
                 </div>
 
+                {/* Platform Popover - Fixed Position */}
+                {isPlatformOpen && ReactDOM.createPortal(
+                  <div
+                    className="fixed inset-0 z-[9999]"
+                    onMouseDown={() => setIsPlatformOpen(false)}
+                  >
+                    <div
+                      className="fixed w-48 rounded-lg shadow-2xl z-[10000] overflow-hidden"
+                      style={{
+                        top: popoverPosition.top,
+                        left: popoverPosition.left,
+                        backgroundColor: '#18181b',
+                        border: '1px solid #27272a'
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-1">
+                        {PLATFORMS.map(platform => (
+                          <button
+                            key={platform}
+                            type="button"
+                            onClick={() => handlePlatformChange(platform)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors cursor-pointer ${focusedTask.platform === platform ? 'bg-primary/10 text-primary' : 'hover:bg-accent text-foreground'}`}
+                          >
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center ${platform === 'YouTube' ? 'bg-[#ff0000] text-white' :
+                              platform === 'Instagram' ? 'bg-[#e1306c] text-white' :
+                                platform === 'TikTok' ? 'bg-white text-black' :
+                                  'bg-indigo-600 text-white'
+                              }`}>
+                              <Icon name={platform === 'YouTube' ? 'play_arrow' : platform === 'Instagram' ? 'photo_camera' : platform === 'TikTok' ? 'music_note' : 'public'} className="text-[10px]" />
+                            </div>
+                            <span className="font-medium">{platform}</span>
+                            {focusedTask.platform === platform && (
+                              <Icon name="check" className="ml-auto text-primary" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
+                {/* Status Popover - Fixed Position */}
+                {isStatusOpen && ReactDOM.createPortal(
+                  <div
+                    className="fixed inset-0 z-[9999]"
+                    onMouseDown={() => setIsStatusOpen(false)}
+                  >
+                    <div
+                      className="fixed w-48 rounded-lg shadow-2xl z-[10000] overflow-hidden"
+                      style={{
+                        top: popoverPosition.top,
+                        left: popoverPosition.left,
+                        backgroundColor: '#18181b',
+                        border: '1px solid #27272a'
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-1">
+                        {COLUMNS.map(column => (
+                          <button
+                            key={column.id}
+                            type="button"
+                            onClick={() => handleStatusChange(column.id as Status)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors cursor-pointer ${focusedTask.status === column.id ? 'bg-primary/10 text-primary' : 'hover:bg-accent text-foreground'}`}
+                          >
+                            <span className={`w-2.5 h-2.5 rounded-full ${column.id === 'Ideias' ? 'bg-yellow-500' :
+                              column.id === 'Roteiro' ? 'bg-blue-500' :
+                                column.id === 'Produção' ? 'bg-purple-500' :
+                                  'bg-green-500'
+                              }`}></span>
+                            <span className="font-medium">{column.title}</span>
+                            {focusedTask.status === column.id && (
+                              <Icon name="check" className="ml-auto text-primary" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
                 <div className="h-px bg-border w-full"></div>
 
-                {/* Description */}
+                {/* Description - Editable */}
                 <div className="flex flex-col gap-3">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Descrição</label>
-                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                    {focusedTask.description || "Nenhuma descrição fornecida para esta tarefa."}
-                  </p>
+                  {isEditingDescription ? (
+                    <textarea
+                      ref={descriptionRef}
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      onBlur={handleSaveDescription}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setEditedDescription(focusedTask.description || '');
+                          setIsEditingDescription(false);
+                        }
+                      }}
+                      placeholder="Adicione uma descrição..."
+                      className="text-sm text-foreground leading-relaxed font-medium bg-transparent border border-border rounded-lg p-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none min-h-[100px]"
+                    />
+                  ) : (
+                    <p
+                      className="text-sm text-muted-foreground leading-relaxed font-medium cursor-text hover:bg-accent/50 rounded-lg p-3 -m-3 transition-colors"
+                      onClick={() => {
+                        setEditedDescription(focusedTask.description || '');
+                        setIsEditingDescription(true);
+                      }}
+                      title="Clique para editar"
+                    >
+                      {focusedTask.description || <span className="italic text-muted-foreground/60">Clique para adicionar uma descrição...</span>}
+                    </p>
+                  )}
                 </div>
 
-                {/* Checklist */}
+                {/* Checklist - Clickable */}
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between items-center">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Checklist</label>
                   </div>
-                  <div className="space-y-4 mt-1">
+                  <div className="space-y-2 mt-1">
                     {focusedTask.checklist?.map(item => (
-                      <div key={item.id} className="flex items-start gap-3 group">
-                        <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors ${item.checked ? 'bg-primary border-primary' : 'border-input group-hover:border-muted-foreground'}`}>
+                      <button
+                        key={item.id}
+                        onClick={() => handleChecklistToggle(item.id)}
+                        className="w-full flex items-start gap-3 group p-2 -mx-2 rounded-lg hover:bg-accent/50 transition-colors text-left"
+                      >
+                        <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors shrink-0 ${item.checked ? 'bg-primary border-primary' : 'border-input group-hover:border-muted-foreground'}`}>
                           {item.checked && <Icon name="check" className="text-[14px] text-primary-foreground" />}
                         </div>
                         <span className={`text-sm font-medium ${item.checked ? 'text-muted-foreground line-through' : 'text-foreground/80'}`}>{item.text}</span>
-                      </div>
+                      </button>
                     ))}
                     {(!focusedTask.checklist || focusedTask.checklist.length === 0) && (
                       <p className="text-sm text-muted-foreground italic">Nenhum item no checklist.</p>

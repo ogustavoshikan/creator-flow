@@ -3,13 +3,21 @@ export default {
     darkMode: "class",
     content: [
         "./index.html",
-        "./**/*.{js,ts,jsx,tsx}",
+        "./*.{js,ts,jsx,tsx}",
+        "./components/**/*.{js,ts,jsx,tsx}",
+        "./hooks/**/*.{js,ts,jsx,tsx}",
+        "./lib/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
         extend: {
             fontFamily: {
                 sans: ["Inter", "sans-serif"],
                 display: ["Inter", "sans-serif"],
+            },
+            transitionDuration: {
+                fast: '150ms',
+                normal: '200ms',
+                slow: '300ms',
             },
             colors: {
                 border: "var(--border)",

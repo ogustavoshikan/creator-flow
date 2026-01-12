@@ -107,7 +107,7 @@ export const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, task, onS
       onClick={handleClose}
     >
       <div
-        className={`w-full max-w-[900px] bg-card text-card-foreground border border-border rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'animate-zoom-in scale-100 opacity-100'}`}
+        className={`w-full max-w-[900px] bg-card text-card-foreground border border-border rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden transition-all duration-300 selection:bg-primary selection:text-primary-foreground ${isClosing ? 'scale-95 opacity-0' : 'animate-zoom-in scale-100 opacity-100'}`}
         onClick={(e) => e.stopPropagation()}
       >
 
